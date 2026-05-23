@@ -1,0 +1,44 @@
+# =====================================================
+# 机型编译矩阵 — 换仓库/机型只需修改此文件
+# =====================================================
+
+name: Build OpenWrt Matrix
+
+on:
+  workflow_dispatch:          # 手动触发
+    inputs:
+      targets:
+        description: '选择编译目标 (逗号分隔, 留空=全部)'
+        default: ''
+  push:
+    paths:
+      - 'configs/**'         # config 变更自动触发
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - id: set
+        run: |
+          # 动态过滤矩阵
+          echo "matrix=$(cat .github/matrix.json \
+            | jq -c 'if env.TARGETS != "" then
+              .include |= map(select(.name |
+              IN(env.TARGETS | split(",")[])))
+              else . end')" >> $GITHUB_OUTPUT
+
+  build:
+    needs: prepare
+    strategy:
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+      fail-fast: false   # 一台失败不影响其他
+    uses: ./.github/workflows/build-core.yml
+    with:
+      name:        ${{ matrix.name }}
+      repo_url:    ${{ matrix.repo_url }}
+      repo_branch: ${{ matrix.repo_branch }}
+      config_file: ${{ matrix.config_file }}
+      diy_script:  ${{ matrix.diy_script }}
+    secrets: inherit

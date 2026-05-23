@@ -8,7 +8,7 @@ on:
   workflow_dispatch:          # 手动触发
     inputs:
       targets:
-        description: '选择编译目标 (逗号分隔, 留空=全部)'
+        description: '360v6'
         default: ''
   push:
     paths:

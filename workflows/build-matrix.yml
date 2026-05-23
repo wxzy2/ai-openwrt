@@ -36,9 +36,9 @@ jobs:
       fail-fast: false   # 一台失败不影响其他
     uses: ./.github/workflows/build-core.yml
     with:
-      name:        ${{ matrix.name }}
-      repo_url:    ${{ matrix.repo_url }}
-      repo_branch: ${{ matrix.repo_branch }}
-      config_file: ${{ matrix.config_file }}
-      diy_script:  ${{ matrix.diy_script }}
+      name:        ${{ 360v6 }}
+      repo_url:    ${{ https://github.com/VIKINGYFY/immortalwrt }}
+      repo_branch: ${{ main }}
+      config_file: ${{ configs/360v6.config }}
+      diy_script:  ${{ scripts/diy-default.sh }}
     secrets: inherit

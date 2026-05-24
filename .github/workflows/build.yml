@@ -1,0 +1,98 @@
+name: Build ImmortalWrt
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '选择编译机型'
+        required: true
+        type: choice
+        options:
+          - 360v6
+          - ax6600
+          - all
+
+env:
+  REPO_URL:    https://github.com/VIKINGYFY/immortalwrt
+  REPO_BRANCH: main
+  TZ:          Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        device: ${{ inputs.target == 'all'
+          && fromJson('["360v6","ax6600"]')
+          || fromJson(format('["{0}"]', inputs.target)) }}
+
+    steps:
+      - name: 释放磁盘空间
+        uses: jlumbroso/free-disk-space@main
+        with: { tool-cache: false, large-packages: true }
+
+      - name: 初始化环境
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            build-essential clang flex bison g++ gawk gettext \
+            git libncurses-dev libssl-dev python3-distutils \
+            rsync unzip zlib1g-dev wget
+          sudo timedatectl set-timezone "$TZ"
+
+      - name: 检出本仓库
+        uses: actions/checkout@v4
+
+      - name: 克隆源码
+        run: |
+          git clone --depth=1 -b $REPO_BRANCH $REPO_URL openwrt
+
+      - name: DIY 第一阶段 (feeds 前)
+        run: |
+          cd openwrt
+          bash $GITHUB_WORKSPACE/scripts/diy-${{ matrix.device }}.sh pre
+
+      - name: 更新安装 Feeds
+        run: |
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: DIY 第二阶段 (feeds 后)
+        run: |
+          cd openwrt
+          bash $GITHUB_WORKSPACE/scripts/diy-${{ matrix.device }}.sh post
+
+      - name: 加载 .config
+        run: |
+          cp configs/${{ matrix.device }}.config openwrt/.config
+          cd openwrt && make defconfig
+
+      - name: 下载依赖包
+        run: |
+          cd openwrt
+          make download -j$(nproc) 2>&1 | grep -i error || true
+
+      - name: 编译固件
+        id: compile
+        run: |
+          cd openwrt
+          make -j$(nproc) || make -j1 V=s
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: 整理固件文件
+        if: steps.compile.outputs.status == 'success'
+        run: |
+          cd openwrt/bin/targets/*/*
+          rm -rf packages
+          echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+
+      - name: 发布 Release
+        if: steps.compile.outputs.status == 'success'
+        uses: ncipollo/release-action@v1
+        with:
+          tag:       ${{ matrix.device }}-${{ github.run_number }}
+          name:      ${{ matrix.device }} Build ${{ github.run_number }}
+          artifacts: ${{ env.FIRMWARE }}/*
+          token:     ${{ secrets.GITHUB_TOKEN }}

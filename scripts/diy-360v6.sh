@@ -25,12 +25,12 @@ pre() {
 
 post() {
   # ── 默认 IP ───────────────────────────────────────
-  sed -i 's/192.168.1.1/192.168.10.1/g' \
+  sed -i 's/192.168.1.1/10.1.1.1/g' \
     package/base-files/files/bin/config_generate
 
   # ── 主机名 ────────────────────────────────────────
-  sed -i 's/ImmortalWrt/360v6/g' \
-    package/base-files/files/bin/config_generate
+  #sed -i 's/ImmortalWrt/360v6/g' \
+  #  package/base-files/files/bin/config_generate
 
   # ── 时区 ──────────────────────────────────────────
   sed -i "s/'UTC'/'CST-8'/g" \

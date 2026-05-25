@@ -113,6 +113,8 @@ jobs:
           cd openwrt/bin/targets/*/*
           rm -rf packages
           echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+          # 把完整展开的 .config 复制到固件目录一起上传
+          cp $GITHUB_WORKSPACE/openwrt/.config $PWD/full.config
 
       - name: 获取编译时间
         if: steps.compile.outputs.status == 'success'

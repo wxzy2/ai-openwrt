@@ -8,16 +8,31 @@ STAGE=${1:-post}
 DEVICE=${2:-unknown}
 
 pre() {
-  # ── 覆盖 feeds.conf.default，只保留官方标准4行 ────────────
-  # ddns-go / openclash 不是标准 feeds 结构，在 post() 里 clone
-  echo "src-git packages https://github.com/immortalwrt/packages.git" > feeds.conf.default
-  echo "src-git luci https://github.com/immortalwrt/luci.git"        >> feeds.conf.default
-  echo "src-git routing https://github.com/openwrt/routing.git"      >> feeds.conf.default
-  echo "src-git telephony https://github.com/openwrt/telephony.git"  >> feeds.conf.default
+  echo "===== DIY Pre Stage (feeds 前) ====="
+
+  # === 关键修复：重新生成 feeds.conf.default，保留 VIKINGYFY 的 NSS feeds ===
+  cat > feeds.conf.default << 'EOF'
+src-git packages https://github.com/immortalwrt/packages.git
+src-git luci https://github.com/immortalwrt/luci.git
+src-git routing https://github.com/openwrt/routing.git
+src-git telephony https://github.com/openwrt/telephony.git
+EOF
+
+  # 追加自定义 feeds（干净写入，避免缩进问题）
+  echo "" >> feeds.conf.default
+  echo "# ================== 自定义 feeds ==================" >> feeds.conf.default
+  echo "src-git ddns-go https://github.com/sirpdboy/luci-app-ddns-go" >> feeds.conf.default
+  echo "src-git openclash https://github.com/vernesong/OpenClash" >> feeds.conf.default
+  echo "# ==================================================" >> feeds.conf.default
+
+  echo "feeds.conf.default 已修复完成"
 }
 
 post() {
-  # ── 默认 IP ───────────────────────────────────────────────
+  echo "===== DIY Post Stage (feeds 后) ====="
+  cd $GITHUB_WORKSPACE/openwrt || exit 1
+
+  # ── 默认 IP ───────────────────────────────────────
   sed -i 's/192.168.1.1/10.1.1.1/g' \
     package/base-files/files/bin/config_generate
 
@@ -76,10 +91,10 @@ post() {
   fi
 
   # ── 强制移除不需要的插件 ──────────────────────────────────
-  # 如需移除其他插件，复制下面格式新增一行并替换包名即可：
-  # find package feeds -type d -name "包名" -exec rm -rf {} + 2>/dev/null || true
   find package feeds -type d -name "luci-app-attendedsysupgrade" \
     -exec rm -rf {} + 2>/dev/null || true
+
+  echo "DIY Post 阶段完成"
 }
 
 case "$STAGE" in

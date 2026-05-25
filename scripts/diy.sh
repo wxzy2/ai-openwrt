@@ -39,7 +39,7 @@ post() {
   # fi
 
   # ── 时区 ──────────────────────────────────────────────────
-  sed -i "s/'UTC'/'CST-8'/g" \
+  sed -i "s/'UTC'/'CST'/g" \
     package/base-files/files/bin/config_generate
 
   # ── Aurora 主题（eamonxg 原作者）─────────────────────────
@@ -97,6 +97,12 @@ post() {
   find package feeds -type d -name "*xray*" \
     -exec rm -rf {} + 2>/dev/null || true
   find package feeds -type f -name "Makefile" -exec grep -l "xray" {} \; | xargs -I {} dirname {} | xargs rm -rf 2>/dev/null || true
+
+  # 清理 .config 中的垃圾配置行（未被选中的插件的 INCLUDE 选项）
+  # 移除所有 luci-app-passwall 相关的行（passwall 已禁用，这些 INCLUDE 选项无用）
+  sed -i '/CONFIG_PACKAGE_luci-app-passwall/d' openwrt/.config 2>/dev/null || true
+  # 移除其他可能的垃圾 CONFIG 行（v2ray / trojan 等未被选中但残留的选项）
+  sed -i '/CONFIG_PACKAGE_.*INCLUDE_/d' openwrt/.config 2>/dev/null || true
 }
 
 case "$STAGE" in

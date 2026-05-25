@@ -14,6 +14,13 @@ pre() {
   echo "src-git luci https://github.com/immortalwrt/luci.git"              >> feeds.conf.default
   echo "src-git routing https://github.com/openwrt/routing.git"            >> feeds.conf.default
   echo "src-git telephony https://github.com/openwrt/telephony.git"        >> feeds.conf.default
+
+  # ── openlist2 需要特定版本的 golang，在 feeds update 前替换 ──
+  # feeds 中的 golang 版本与 openlist2 不兼容，需要用 sbwml 维护的版本
+  rm -rf feeds/packages/lang/golang 2>/dev/null || true
+  git clone --depth=1 -b 24.x \
+    https://github.com/sbwml/packages_lang_golang \
+    feeds/packages/lang/golang
 }
 
 post() {
@@ -53,7 +60,9 @@ post() {
   # ── openlist2（sbwml 原作者）─────────────────────────────
   git clone --depth=1 \
     https://github.com/sbwml/luci-app-openlist2 \
-    package/luci-app-openlist2
+    package/luci-app-openlist2 2>/dev/null || {
+    echo "WARNING: openlist2 clone failed, skipping..."
+  }
 
   # ── homeproxy（immortalwrt 官方）─────────────────────────
   git clone --depth=1 \
@@ -77,10 +86,17 @@ post() {
   fi
 
   # ── 强制移除不需要的插件 ──────────────────────────────────
-  # 如需移除其他插件，复制下面格式新增一行并替换包名即可：
-  # find package feeds -type d -name "包名" -exec rm -rf {} + 2>/dev/null || true
+  # 格式: find package feeds -type d -name "包名" -exec rm -rf {} + 2>/dev/null || true
+  # 如需移除其他插件，复制下面格式新增一行并替换包名即可
+
+  # 移除 attended sysupgrade
   find package feeds -type d -name "luci-app-attendedsysupgrade" \
     -exec rm -rf {} + 2>/dev/null || true
+
+  # 移除 xray 及所有相关包（不删除 sing-box，homeproxy 需要它）
+  find package feeds -type d -name "*xray*" \
+    -exec rm -rf {} + 2>/dev/null || true
+  find package feeds -type f -name "Makefile" -exec grep -l "xray" {} \; | xargs -I {} dirname {} | xargs rm -rf 2>/dev/null || true
 }
 
 case "$STAGE" in

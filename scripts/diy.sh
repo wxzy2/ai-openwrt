@@ -8,14 +8,12 @@ STAGE=${1:-post}
 DEVICE=${2:-unknown}
 
 pre() {
-  cat > feeds.conf.default << 'EOF'
-src-git nss_packages https://github.com/VIKINGYFY/nss-packages.git
-src-git packages https://github.com/immortalwrt/packages.git
-src-git luci https://github.com/immortalwrt/luci.git
-src-git routing https://github.com/openwrt/routing.git
-src-git telephony https://github.com/openwrt/telephony.git
-src-git video https://github.com/openwrt/video.git
-EOF
+  # ── 覆盖 feeds.conf.default，包含 NSS 加速库 ────────────
+  echo "src-git nss_packages https://github.com/VIKINGYFY/nss-packages.git" > feeds.conf.default
+  echo "src-git packages https://github.com/immortalwrt/packages.git"      >> feeds.conf.default
+  echo "src-git luci https://github.com/immortalwrt/luci.git"              >> feeds.conf.default
+  echo "src-git routing https://github.com/openwrt/routing.git"            >> feeds.conf.default
+  echo "src-git telephony https://github.com/openwrt/telephony.git"        >> feeds.conf.default
 }
 
 post() {
@@ -24,13 +22,14 @@ post() {
     package/base-files/files/bin/config_generate
 
   # ── 主机名（按机型区分）──────────────────────────────────
-  #if [ "$DEVICE" = "ax6600" ]; then
-  #  sed -i 's/ImmortalWrt/AX6600/g' \
-  #    package/base-files/files/bin/config_generate
-  #else
-  #  sed -i 's/ImmortalWrt/360v6/g' \
-  #    package/base-files/files/bin/config_generate
-  #fi
+  # 如需启用，取消下面的注释即可
+  # if [ "$DEVICE" = "ax6600" ]; then
+  #   sed -i 's/ImmortalWrt/AX6600/g' \
+  #     package/base-files/files/bin/config_generate
+  # else
+  #   sed -i 's/ImmortalWrt/360v6/g' \
+  #     package/base-files/files/bin/config_generate
+  # fi
 
   # ── 时区 ──────────────────────────────────────────────────
   sed -i "s/'UTC'/'CST-8'/g" \

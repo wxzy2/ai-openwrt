@@ -2,8 +2,6 @@
 # =====================================================
 # 通用 DIY 脚本（360v6 / ax6600 共用）
 # 用法: bash diy.sh [pre|post] [device]
-# 例如: bash diy.sh pre 360v6
-#       bash diy.sh post ax6600
 # =====================================================
 
 STAGE=${1:-post}
@@ -11,29 +9,28 @@ DEVICE=${2:-unknown}
 
 pre() {
   # ── 整体覆盖 feeds.conf.default，避免原仓库潜在语法错误 ──
-  cat > feeds.conf.default << 'FEEDS'
-src-git packages https://github.com/immortalwrt/packages.git
-src-git luci https://github.com/immortalwrt/luci.git
-src-git routing https://github.com/openwrt/routing.git
-src-git telephony https://github.com/openwrt/telephony.git
-src-git ddns-go https://github.com/sirpdboy/luci-app-ddns-go
-src-git openclash https://github.com/vernesong/OpenClash
-FEEDS
+  # 用逐行 echo 写入，避免 heredoc 缩进带来的格式问题
+  echo "src-git packages https://github.com/immortalwrt/packages.git" > feeds.conf.default
+  echo "src-git luci https://github.com/immortalwrt/luci.git"        >> feeds.conf.default
+  echo "src-git routing https://github.com/openwrt/routing.git"      >> feeds.conf.default
+  echo "src-git telephony https://github.com/openwrt/telephony.git"  >> feeds.conf.default
+  echo "src-git ddns-go https://github.com/sirpdboy/luci-app-ddns-go" >> feeds.conf.default
+  echo "src-git openclash https://github.com/vernesong/OpenClash"    >> feeds.conf.default
 }
 
 post() {
-  # ── 默认 IP（两个机型相同，改这里同时生效）──────────────
-  sed -i 's/192.168.1.1/10.1.1.1/g' \
+  # ── 默认 IP（两个机型相同）───────────────────────────────
+  sed -i 's/192.168.1.1/192.168.10.1/g' \
     package/base-files/files/bin/config_generate
 
   # ── 主机名（按机型区分）──────────────────────────────────
-  #if [ "$DEVICE" = "ax6600" ]; then
-   # sed -i 's/ImmortalWrt/AX6600/g' \
-    #  package/base-files/files/bin/config_generate
-  #else
-  #  sed -i 's/ImmortalWrt/360v6/g' \
-  #    package/base-files/files/bin/config_generate
-  #fi
+  if [ "$DEVICE" = "ax6600" ]; then
+    sed -i 's/ImmortalWrt/AX6600/g' \
+      package/base-files/files/bin/config_generate
+  else
+    sed -i 's/ImmortalWrt/360v6/g' \
+      package/base-files/files/bin/config_generate
+  fi
 
   # ── 时区（两个机型相同）──────────────────────────────────
   sed -i "s/'UTC'/'CST-8'/g" \
@@ -63,7 +60,7 @@ post() {
     $GITHUB_WORKSPACE/openwrt/package/luci-app-aria2
   cd $GITHUB_WORKSPACE/openwrt
 
-  # ── AX6600 专属：LED 点阵屏控制（NONGFAH 原作者）────────
+  # ── AX6600 专属：LED 点阵屏控制──────────────────────────
   if [ "$DEVICE" = "ax6600" ]; then
     git clone --depth=1 \
       https://github.com/NONGFAH/luci-app-athena-led \

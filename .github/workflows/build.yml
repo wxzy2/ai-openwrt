@@ -119,6 +119,34 @@ jobs:
         id: time
         run: echo "date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
 
+      - name: 生成插件清单
+        if: steps.compile.outputs.status == 'success'
+        run: |
+          cd openwrt
+          echo "# 固件包含的插件列表" > $GITHUB_WORKSPACE/PLUGINS.md
+          echo "" >> $GITHUB_WORKSPACE/PLUGINS.md
+          echo "**编译时间**: ${{ steps.time.outputs.date }}" >> $GITHUB_WORKSPACE/PLUGINS.md
+          echo "**编译机型**: ${{ matrix.device }}" >> $GITHUB_WORKSPACE/PLUGINS.md
+          echo "**内核版本**: $(cat .config | grep CONFIG_LINUX_VERSION | cut -d'=' -f2)" >> $GITHUB_WORKSPACE/PLUGINS.md
+          echo "" >> $GITHUB_WORKSPACE/PLUGINS.md
+          echo "## 已安装插件" >> $GITHUB_WORKSPACE/PLUGINS.md
+          echo "" >> $GITHUB_WORKSPACE/PLUGINS.md
+          
+          # 提取所有被选中的 luci-app 和主要包
+          grep "^CONFIG_PACKAGE_" .config | grep "=y" | sed 's/CONFIG_PACKAGE_//g' | sed 's/=y//g' | sort | while read pkg; do
+            case "$pkg" in
+              luci-app-*) echo "- $pkg" >> $GITHUB_WORKSPACE/PLUGINS.md ;;
+              luci-theme-*) echo "- $pkg (主题)" >> $GITHUB_WORKSPACE/PLUGINS.md ;;
+              aria2|openlist2|ddns-go|homeproxy|openclash) echo "- $pkg" >> $GITHUB_WORKSPACE/PLUGINS.md ;;
+            esac
+          done
+          
+          echo "" >> $GITHUB_WORKSPACE/PLUGINS.md
+          echo "---" >> $GITHUB_WORKSPACE/PLUGINS.md
+          echo "生成时间: $(date)" >> $GITHUB_WORKSPACE/PLUGINS.md
+          
+          cat $GITHUB_WORKSPACE/PLUGINS.md
+
       - name: 检查固件文件
         if: steps.compile.outputs.status == 'success'
         run: |
@@ -133,6 +161,7 @@ jobs:
           tag:       ${{ matrix.device }}-${{ steps.time.outputs.date }}
           name:      ${{ matrix.device }} ${{ steps.time.outputs.date }}
           artifacts: ${{ env.FIRMWARE }}/*
+          bodyFile:  ${{ github.workspace }}/PLUGINS.md
           token:     ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           makeLatest: false

@@ -18,7 +18,7 @@ pre() {
   # ── openlist2 需要特定版本的 golang，在 feeds update 前替换 ──
   # feeds 中的 golang 版本与 openlist2 不兼容，需要用 sbwml 维护的版本
   rm -rf feeds/packages/lang/golang 2>/dev/null || true
-  git clone --depth=1 -b 24.x \
+  git clone --depth=1 -b 26.x \
     https://github.com/sbwml/packages_lang_golang \
     feeds/packages/lang/golang
 }

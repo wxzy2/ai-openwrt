@@ -39,7 +39,8 @@ post() {
   # fi
 
   # ── 时区 ──────────────────────────────────────────────────
-  sed -i "s/'UTC'/'CST'/g" \
+  # 改为北京时区（东八区）
+  sed -i "s/'UTC'/'CST-8'/g" \
     package/base-files/files/bin/config_generate
 
   # ── Aurora 主题（eamonxg 原作者）─────────────────────────

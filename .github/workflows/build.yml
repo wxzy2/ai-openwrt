@@ -19,7 +19,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -38,7 +38,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential clang flex bison g++ gawk gettext \
             git libncurses-dev libssl-dev python3-distutils \
-            rsync unzip zlib1g-dev wget
+            rsync unzip zlib1g-dev wget ccache
           sudo timedatectl set-timezone "$TZ"
 
       - name: 检出本仓库
@@ -48,16 +48,23 @@ jobs:
         run: |
           git clone --depth=1 -b $REPO_BRANCH $REPO_URL openwrt
 
-      - name: 缓存工具链
+      - name: 缓存编译工具链
         uses: actions/cache@v4
         with:
           path: |
             openwrt/.ccache
             openwrt/staging_dir/host
             openwrt/staging_dir/toolchain-*
+            openwrt/build_dir/host
           key: ${{ matrix.device }}-toolchain-${{ hashFiles(format('configs/{0}.config', matrix.device)) }}
           restore-keys: |
             ${{ matrix.device }}-toolchain-
+
+      - name: 启用 ccache 加速
+        run: |
+          cd openwrt
+          echo 'CONFIG_CCACHE=y' >> .config
+          echo 'CONFIG_CCACHE_DIR=openwrt/.ccache' >> .config
 
       - name: DIY 第一阶段 (feeds 前)
         run: |
@@ -112,6 +119,13 @@ jobs:
         id: time
         run: echo "date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
 
+      - name: 检查固件文件
+        if: steps.compile.outputs.status == 'success'
+        run: |
+          ls -lh ${{ env.FIRMWARE }}/
+          echo "固件路径: ${{ env.FIRMWARE }}"
+          echo "固件文件数: $(ls ${{ env.FIRMWARE }}/* 2>/dev/null | wc -l)"
+
       - name: 发布 Release
         if: steps.compile.outputs.status == 'success'
         uses: ncipollo/release-action@v1
@@ -120,6 +134,8 @@ jobs:
           name:      ${{ matrix.device }} ${{ steps.time.outputs.date }}
           artifacts: ${{ env.FIRMWARE }}/*
           token:     ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          makeLatest: false
 
       - name: 清理旧 Release（每个机型保留最新 20 个）
         if: steps.compile.outputs.status == 'success'
@@ -127,7 +143,7 @@ jobs:
         with:
           script: |
             const device = "${{ matrix.device }}";
-            const keep   = 20;  // ← 修改此处控制保留数量
+            const keep   = 20;
 
             const releases = await github.paginate(
               github.rest.repos.listReleases,

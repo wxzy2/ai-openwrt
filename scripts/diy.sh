@@ -1,7 +1,6 @@
 #!/bin/bash
 # =====================================================
 # 通用 DIY 脚本（360v6 / ax6600 共用）
-# 用法: bash diy.sh [pre|post] [device]
 # =====================================================
 
 STAGE=${1:-post}
@@ -10,7 +9,7 @@ DEVICE=${2:-unknown}
 pre() {
   echo "===== DIY Pre Stage (feeds 前) ====="
 
-  # === 关键修复：重新生成 feeds.conf.default，保留 VIKINGYFY 的 NSS feeds ===
+  # 严格重建 feeds.conf.default（保留 VIKINGYFY 的 NSS feeds）
   cat > feeds.conf.default << 'EOF'
 src-git packages https://github.com/immortalwrt/packages.git
 src-git luci https://github.com/immortalwrt/luci.git
@@ -18,14 +17,12 @@ src-git routing https://github.com/openwrt/routing.git
 src-git telephony https://github.com/openwrt/telephony.git
 EOF
 
-  # 追加自定义 feeds
+  # 追加自定义 feeds（干净无多余空行）
   echo "" >> feeds.conf.default
-  echo "# ================== 自定义 feeds ==================" >> feeds.conf.default
+  echo "# Custom feeds" >> feeds.conf.default
   echo "src-git ddns-go https://github.com/sirpdboy/luci-app-ddns-go" >> feeds.conf.default
-  echo "src-git openclash https://github.com/vernesong/OpenClash" >> feeds.conf.default
-  echo "# ==================================================" >> feeds.conf.default
 
-  echo "feeds.conf.default 已修复完成"
+  echo "feeds.conf.default 已正确生成"
 }
 
 post() {
@@ -61,7 +58,7 @@ post() {
   cp -r applications/luci-app-aria2 $GITHUB_WORKSPACE/openwrt/package/luci-app-aria2
   cd $GITHUB_WORKSPACE/openwrt
 
-  # ── AX6600 LED（可选） ────────────────────────────
+  # ── AX6600 LED ────────────────────────────────────
   if [ "$DEVICE" = "ax6600" ]; then
     git clone --depth=1 https://github.com/NONGFAH/luci-app-athena-led package/luci-app-athena-led
   fi

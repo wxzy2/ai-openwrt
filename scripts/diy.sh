@@ -24,13 +24,13 @@ post() {
     package/base-files/files/bin/config_generate
 
   # ── 主机名（按机型区分）──────────────────────────────────
-  if [ "$DEVICE" = "ax6600" ]; then
-    sed -i 's/ImmortalWrt/AX6600/g' \
-      package/base-files/files/bin/config_generate
-  else
-    sed -i 's/ImmortalWrt/360v6/g' \
-      package/base-files/files/bin/config_generate
-  fi
+  #if [ "$DEVICE" = "ax6600" ]; then
+  #  sed -i 's/ImmortalWrt/AX6600/g' \
+  #    package/base-files/files/bin/config_generate
+  #else
+  #  sed -i 's/ImmortalWrt/360v6/g' \
+  #    package/base-files/files/bin/config_generate
+  #fi
 
   # ── 时区 ──────────────────────────────────────────────────
   sed -i "s/'UTC'/'CST-8'/g" \

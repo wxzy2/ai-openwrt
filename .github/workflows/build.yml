@@ -15,7 +15,7 @@ on:
 env:
   REPO_URL:    https://github.com/VIKINGYFY/immortalwrt
   REPO_BRANCH: main
-  TZ:          Asia/Shanghai
+  TZ:          Asia/Beijing
 
 jobs:
   build:

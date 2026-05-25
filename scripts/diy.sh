@@ -9,7 +9,7 @@ DEVICE=${2:-unknown}
 
 pre() {
   # ── 覆盖 feeds.conf.default，只保留官方标准4行 ────────────
-  # ddns-go / openclash 不是标准 feeds 结构，改在 post() 里 clone
+  # ddns-go / openclash 不是标准 feeds 结构，在 post() 里 clone
   echo "src-git packages https://github.com/immortalwrt/packages.git" > feeds.conf.default
   echo "src-git luci https://github.com/immortalwrt/luci.git"        >> feeds.conf.default
   echo "src-git routing https://github.com/openwrt/routing.git"      >> feeds.conf.default
@@ -39,12 +39,12 @@ post() {
     https://github.com/eamonxg/luci-theme-aurora \
     package/luci-theme-aurora
 
-  # ── ddns-go（sirpdboy 原作者，非标准 feeds 故用 clone）───
+  # ── ddns-go（sirpdboy 原作者）────────────────────────────
   git clone --depth=1 \
     https://github.com/sirpdboy/luci-app-ddns-go \
     package/luci-app-ddns-go
 
-  # ── OpenClash（vernesong 原作者，非标准 feeds 故用 clone）
+  # ── OpenClash（vernesong 原作者）─────────────────────────
   git clone --depth=1 -b master \
     https://github.com/vernesong/OpenClash \
     package/luci-app-openclash

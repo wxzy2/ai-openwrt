@@ -51,7 +51,7 @@ jobs:
       - name: DIY 第一阶段 (feeds 前)
         run: |
           cd openwrt
-          bash $GITHUB_WORKSPACE/scripts/diy-${{ matrix.device }}.sh pre
+          bash $GITHUB_WORKSPACE/scripts/diy.sh pre ${{ matrix.device }}
 
       - name: 更新安装 Feeds
         run: |
@@ -62,7 +62,7 @@ jobs:
       - name: DIY 第二阶段 (feeds 后)
         run: |
           cd openwrt
-          bash $GITHUB_WORKSPACE/scripts/diy-${{ matrix.device }}.sh post
+          bash $GITHUB_WORKSPACE/scripts/diy.sh post ${{ matrix.device }}
 
       - name: 加载 .config
         run: |
@@ -96,6 +96,7 @@ jobs:
           name:      ${{ matrix.device }} Build ${{ github.run_number }}
           artifacts: ${{ env.FIRMWARE }}/*
           token:     ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: 清理旧 Release（每个机型保留最新 3 个）
         if: steps.compile.outputs.status == 'success'

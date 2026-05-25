@@ -39,9 +39,10 @@ post() {
   # fi
 
   # ── 时区 ──────────────────────────────────────────────────
-  # 改为北京时区（东八区）
-  sed -i "s/'UTC'/'CST-8'/g" \
-    package/base-files/files/bin/config_generate
+  
+  # 完美修改默认时区为中国北京时间（东八区）
+  sed -i 's/timezone_hint.*/timezone_hint="Asia\/Shanghai"/' package/base-files/files/bin/config_generate
+  sed -i 's/timezone=.*/timezone="CST-8"/' package/base-files/files/bin/config_generate
 
   # ── Aurora 主题（eamonxg 原作者）─────────────────────────
   git clone --depth=1 -b master \

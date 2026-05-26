@@ -76,3 +76,7 @@ post() {
   # ── 强制禁用 uhttpd（immortalwrt 默认依赖，但我们不需要）──
   find package feeds -type d -name "uhttpd" -exec rm -rf {} + 2>/dev/null || true
 }
+
+  # 脚本末尾加上函数调用（必须！）
+  DEVICE="${2:-}"
+  "$1" "$DEVICE"

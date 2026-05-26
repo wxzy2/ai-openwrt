@@ -5,8 +5,6 @@ pre() {
   echo "src-git luci https://github.com/immortalwrt/luci.git"              >> feeds.conf.default
   echo "src-git routing https://github.com/openwrt/routing.git"            >> feeds.conf.default
   echo "src-git telephony https://github.com/openwrt/telephony.git"        >> feeds.conf.default
-  
-  # 【调整】这里不再进行 golang 的克隆，因为文件夹还没生成
 }
 
 post() {
@@ -41,11 +39,13 @@ post() {
     package/luci-app-openclash
 
   # ── openlist2 ─────────────────────────────
+  # 仓库结构：根目录下有 openlist2/ 和 luci-app-openlist2/ 两个子目录
+  # 必须分别放到对应的 package/ 目录下，否则 OpenWrt 找不到 Makefile
   git clone --depth=1 \
     https://github.com/sbwml/luci-app-openlist2 \
-    package/luci-app-openlist2 2>/dev/null || {
-    echo "WARNING: openlist2 clone failed, skipping..."
-  }
+    /tmp/luci-app-openlist2-src
+  cp -r /tmp/luci-app-openlist2-src/openlist2        package/openlist2
+  cp -r /tmp/luci-app-openlist2-src/luci-app-openlist2 package/luci-app-openlist2
 
   # ── homeproxy ─────────────────────────
   git clone --depth=1 \
@@ -73,6 +73,6 @@ post() {
   find package feeds -type d -name "*xray*" -exec rm -rf {} + 2>/dev/null || true
   find package feeds -type f -name "Makefile" -exec grep -l "xray" {} \; | xargs -I {} dirname {} | xargs rm -rf 2>/dev/null || true
 
-  sed -i '/CONFIG_PACKAGE_luci-app-passwall/d' openwrt/.config 2>/dev/null || true
-  sed -i '/CONFIG_PACKAGE_.*INCLUDE_/d' openwrt/.config 2>/dev/null || true
+  # ── 强制禁用 uhttpd（immortalwrt 默认依赖，但我们不需要）──
+  find package feeds -type d -name "uhttpd" -exec rm -rf {} + 2>/dev/null || true
 }

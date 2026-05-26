@@ -73,8 +73,6 @@ post() {
   find package feeds -type d -name "*xray*" -exec rm -rf {} + 2>/dev/null || true
   find package feeds -type f -name "Makefile" -exec grep -l "xray" {} \; | xargs -I {} dirname {} | xargs rm -rf 2>/dev/null || true
 
- # ── 强制禁用 uhttpd ──
-  find package feeds -type d -name "uhttpd" -exec rm -rf {} + 2>/dev/null || true
 }
 
 # ▼▼▼ 这两行是关键，之前完全缺失 ▼▼▼

@@ -38,7 +38,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential clang flex bison g++ gawk gettext \
             git libncurses-dev libssl-dev python3-dev \
-            rsync unzip zlib1g-dev wget ccache
+            rsync unzip zlib1g-dev wget ccache libfuse-dev
           sudo timedatectl set-timezone "$TZ"
 
       - name: 检出本仓库

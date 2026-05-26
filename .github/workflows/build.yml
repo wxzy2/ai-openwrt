@@ -56,6 +56,7 @@ jobs:
             openwrt/staging_dir/host
             openwrt/staging_dir/toolchain-*
             openwrt/build_dir/host
+            openwrt/build_dir/toolchain-*
           key: ${{ matrix.device }}-toolchain-${{ hashFiles(format('configs/{0}.config', matrix.device)) }}
           restore-keys: |
             ${{ matrix.device }}-toolchain-
